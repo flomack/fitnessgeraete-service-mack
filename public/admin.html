@@ -5,7 +5,7 @@
 <title>Aufträge – Fitnessgeräte Service Mack Backend</title>
 <meta name="robots" content="noindex">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="style.css">
 <style>
 body{height:100vh;display:flex;flex-direction:column;overflow:hidden}
 .login{margin:auto;width:min(380px,90vw);background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:32px}
@@ -51,6 +51,9 @@ td{padding:14px 10px;border-bottom:1px solid var(--line)}tr.r{cursor:pointer}tr.
 .empty{color:var(--muted);font-size:13px;text-align:center;padding:20px 0}
 </style></head>
 <body>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="config.js"></script>
+<script src="sb.js"></script>
 <div id="app"></div><div class="scrim" id="scrim"></div><aside class="drawer" id="drawer" aria-label="Auftrag"></aside>
 <script>
 const COLS = [['neu','Neu'],['geprueft','In Prüfung'],['termin','Termin vereinbart'],['in_arbeit','In Bearbeitung'],['teile','Wartet auf Teile'],['erledigt','Erledigt']];
@@ -63,15 +66,37 @@ const $ = (s) => document.querySelector(s), app = $('#app');
 const esc = (t) => String(t ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const ref = (id) => 'T-' + String(id).padStart(4,'0');
 const ago = (iso) => { const m = (Date.now()-new Date(iso))/6e4; return m<60?`${Math.round(m)} Min.`:m<1440?`${Math.round(m/60)} Std.`:`${Math.round(m/1440)} Tg.`; };
-const api = async (u, o={}) => { const r = await fetch(u, { headers:{'Content-Type':'application/json'}, ...o }); if (r.status===401) { loginView(); throw 0; } return r.json(); };
-
-function loginView(){
-  app.innerHTML = `<form class="login" id="lf"><a class="logo"><img class="mk" src="/mark.png" alt=""><span class="lt"><b>Fitnessgeräte</b><small>Service · Backend</small></span></a><h1>Anmelden</h1>
-    <input type="password" id="pw" placeholder="Passwort" autofocus autocomplete="current-password"><p id="le" style="color:#d92d20;font-size:14px;margin:10px 0 0"></p>
-    <button class="btn btn-primary" style="margin-top:16px;width:100%;justify-content:center">Anmelden</button></form>`;
-  $('#lf').onsubmit = async (e) => { e.preventDefault(); const r = await fetch('/api/admin/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:$('#pw').value})}); r.ok ? load() : $('#le').textContent = (await r.json()).error; };
+const EV = { neu:'Neu', geprueft:'In Prüfung', termin:'Termin vereinbart', in_arbeit:'In Bearbeitung', teile:'Wartet auf Teile', erledigt:'Erledigt' };
+const logEvent = (id, kind, text) => sb.from('ticket_events').insert({ ticket_id:id, kind, text });
+// Änderung speichern und im Verlauf festhalten
+async function update(id, patch, evText){
+  const { error } = await sb.from('tickets').update({ ...patch, updated_at:new Date().toISOString() }).eq('id', id);
+  if (error) { alert('Speichern fehlgeschlagen: ' + error.message); return false; }
+  if (evText) await logEvent(id, 'change', evText);
+  return true;
 }
-async function load(){ try { T = (await api('/api/admin/tickets')).tickets; draw(); } catch {} }
+
+function loginView(msg=''){
+  app.innerHTML = `<form class="login" id="lf"><a class="logo"><img class="mk" src="mark.png" alt=""><span class="lt"><b>Fitnessgeräte</b><small>Service · Backend</small></span></a><h1>Anmelden</h1>
+    <input type="email" id="em" placeholder="E-Mail" autofocus autocomplete="username" style="margin-bottom:10px">
+    <input type="password" id="pw" placeholder="Passwort" autocomplete="current-password"><p id="le" style="color:#d92d20;font-size:14px;margin:10px 0 0">${esc(msg)}</p>
+    <button class="btn btn-primary" style="margin-top:16px;width:100%;justify-content:center">Anmelden</button></form>`;
+  $('#lf').onsubmit = async (e) => { e.preventDefault();
+    if (!window.sbReady) return $('#le').textContent = 'Backend ist noch nicht mit Supabase verbunden (config.js).';
+    const { error } = await sb.auth.signInWithPassword({ email:$('#em').value.trim(), password:$('#pw').value });
+    error ? $('#le').textContent = 'E-Mail oder Passwort falsch' : load(); };
+}
+async function load(){
+  if (!window.sbReady) return loginView();
+  const { data:{ session } } = await sb.auth.getSession();
+  if (!session) return loginView();
+  const adm = await sb.from('admins').select('user_id').maybeSingle();
+  if (!adm.data) { await sb.auth.signOut(); return loginView('Dieses Konto hat keinen Zugriff auf das Backend.'); }
+  const { data, error } = await sb.from('tickets').select('*').eq('archived', false).order('id', { ascending:false });
+  if (error) return loginView(error.message);
+  T = data.map(t => ({ ...t, due: t.due || '', assignee: t.assignee || '', photos: t.photos || [] }));
+  draw();
+}
 
 function filtered(){
   let l = T.filter(t => (showDone || t.status!=='erledigt' || view==='board') && (!fp || t.priority===fp) &&
@@ -81,7 +106,7 @@ function filtered(){
 }
 function draw(){
   const open = T.filter(t=>t.status!=='erledigt'), neu = T.filter(t=>t.status==='neu'), hot = open.filter(t=>t.priority==='hoch');
-  app.innerHTML = `<div class="hd"><a class="logo"><img class="mk" src="/mark.png" alt=""><span class="lt"><b>Fitnessgeräte</b><small>Service · Aufträge</small></span></a><div class="tools">
+  app.innerHTML = `<div class="hd"><a class="logo"><img class="mk" src="mark.png" alt=""><span class="lt"><b>Fitnessgeräte</b><small>Service · Aufträge</small></span></a><div class="tools">
     <input id="q" type="search" placeholder="Suchen: Studio, Marke, Nr. …" value="${esc(q)}">
     <select id="fp"><option value="">Alle Prioritäten</option>${['hoch','mittel','niedrig'].map(p=>`<option ${fp===p?'selected':''} value="${p}">${p[0].toUpperCase()+p.slice(1)}</option>`).join('')}</select>
     <select id="so">${[['new','Neueste zuerst'],['old','Älteste zuerst'],['prio','Priorität'],['studio','Studio A–Z']].map(([v,l])=>`<option ${sort===v?'selected':''} value="${v}">${l}</option>`).join('')}</select>
@@ -92,7 +117,7 @@ function draw(){
   $('#q').oninput = (e) => { q = e.target.value.toLowerCase(); const p = e.target.selectionStart; draw(); const n=$('#q'); n.focus(); n.setSelectionRange(p,p); };
   $('#fp').onchange = (e)=>{fp=e.target.value;draw()}; $('#so').onchange=(e)=>{sort=e.target.value;draw()};
   document.querySelectorAll('.seg button').forEach(b=>b.onclick=()=>{view=b.dataset.v;localStorage.setItem('fs_view',view);draw()});
-  $('#lo').onclick = async()=>{await fetch('/api/admin/logout',{method:'POST'});loginView()};
+  $('#lo').onclick = async()=>{await sb.auth.signOut();loginView()};
   document.querySelectorAll('[data-open]').forEach(el=>el.onclick=()=>openT(+el.dataset.open));
   const sd = $('#sd'); if (sd) sd.onchange = (e)=>{showDone=e.target.checked;draw()};
   dnd();
@@ -116,12 +141,14 @@ function listHTML(){
 function dnd(){
   let id; document.querySelectorAll('.tk').forEach(el=>{el.ondragstart=e=>{id=+el.dataset.id;el.classList.add('drag');e.dataTransfer.effectAllowed='move'};el.ondragend=()=>el.classList.remove('drag')});
   document.querySelectorAll('.col').forEach(c=>{c.ondragover=e=>{e.preventDefault();c.classList.add('over')};c.ondragleave=()=>c.classList.remove('over');
-    c.ondrop=async e=>{e.preventDefault();c.classList.remove('over');const t=T.find(x=>x.id===id);if(!t||t.status===c.dataset.s)return;t.status=c.dataset.s;draw();
-      await api('/api/admin/tickets/'+id,{method:'PATCH',body:JSON.stringify({status:t.status})})}});
+    c.ondrop=async e=>{e.preventDefault();c.classList.remove('over');const t=T.find(x=>x.id===id);if(!t||t.status===c.dataset.s)return;const old=t.status;t.status=c.dataset.s;draw();
+      await update(id,{status:t.status},`Status: ${EV[old]} → ${EV[t.status]}`)}});
 }
 
 async function openT(id){
-  const { ticket:t, events } = await api('/api/admin/tickets/'+id);
+  const t = T.find(x => x.id === id);
+  const { data: events = [] } = await sb.from('ticket_events').select('*').eq('ticket_id', id).order('id', { ascending:false });
+  const urls = t.photos.length ? ((await sb.storage.from('ticket-photos').createSignedUrls(t.photos, 3600)).data || []).map(x => x.signedUrl).filter(Boolean) : [];
   const d = $('#drawer');
   d.innerHTML = `<button class="close" id="cl" aria-label="Schließen">✕</button><div class="lab">${ref(t.id)} · ${new Date(t.created_at).toLocaleString('de-DE')}</div>
     <h2>${esc(t.studio)}</h2><div style="color:var(--muted)">${esc([t.brand,t.model,t.category].filter(Boolean).join(' · '))}</div>
@@ -131,7 +158,7 @@ async function openT(id){
       <label>Zuständig<input id="as" value="${esc(t.assignee)}" placeholder="Techniker"></label>
       <label>Termin<input id="du" type="date" value="${esc(t.due)}"></label></div>
     <div class="lab">Problem · ${URG[t.urgency]||''} · ${TYPE[t.type]||''}</div><div class="box">${esc(t.description)||'–'}</div>
-    ${t.photos.length?`<div class="ph">${t.photos.map(p=>`<a href="/uploads/${p}" target="_blank"><img src="/uploads/${p}" alt="Foto"></a>`).join('')}</div>`:''}
+    ${urls.length?`<div class="ph">${urls.map(u=>`<a href="${u}" target="_blank"><img src="${u}" alt="Foto"></a>`).join('')}</div>`:''}
     <div class="kv"><span>Kontakt</span><b>${esc(t.name)}</b><span>Telefon</span><a href="tel:${esc(t.phone)}">${esc(t.phone)}</a><span>E-Mail</span><a href="mailto:${esc(t.email)}">${esc(t.email)}</a><span>Ort</span><div>${esc(t.location)||'–'}</div></div>
     <div class="lab" style="margin-top:24px">Notiz hinzufügen</div><textarea id="nt" rows="3" placeholder="z. B. Kunde zurückgerufen, Teil bestellt …"></textarea>
     <button class="btn btn-primary sm" id="ns" style="margin-top:10px">Notiz speichern</button>
@@ -140,11 +167,11 @@ async function openT(id){
   d.classList.add('open'); $('#scrim').classList.add('on');
   const close = ()=>{d.classList.remove('open');$('#scrim').classList.remove('on')};
   $('#cl').onclick = $('#scrim').onclick = close;
-  const patch = async (b)=>{await api('/api/admin/tickets/'+id,{method:'PATCH',body:JSON.stringify(b)}); await load(); openT(id)};
-  $('#st').onchange=e=>patch({status:e.target.value}); $('#pr').onchange=e=>patch({priority:e.target.value});
-  $('#as').onchange=e=>patch({assignee:e.target.value}); $('#du').onchange=e=>patch({due:e.target.value});
-  $('#ns').onclick=async()=>{const v=$('#nt').value.trim();if(!v)return;await api(`/api/admin/tickets/${id}/notes`,{method:'POST',body:JSON.stringify({text:v})});openT(id)};
-  $('#ar').onclick=async()=>{if(confirm('Auftrag archivieren?')){await api('/api/admin/tickets/'+id,{method:'PATCH',body:JSON.stringify({archived:true})});close();load()}};
+  const patch = async (col, val, txt)=>{ if (await update(id, { [col]: val === '' && col === 'due' ? null : val }, txt)) { await load(); openT(id); } };
+  $('#st').onchange=e=>patch('status',e.target.value,`Status: ${EV[t.status]} → ${EV[e.target.value]}`); $('#pr').onchange=e=>patch('priority',e.target.value,`Priorität: ${t.priority} → ${e.target.value}`);
+  $('#as').onchange=e=>patch('assignee',e.target.value,`Zuständig: ${e.target.value||'—'}`); $('#du').onchange=e=>patch('due',e.target.value,`Termin: ${e.target.value||'—'}`);
+  $('#ns').onclick=async()=>{const v=$('#nt').value.trim();if(!v)return;await logEvent(id,'note',v);openT(id)};
+  $('#ar').onclick=async()=>{if(confirm('Auftrag archivieren?')){if(await update(id,{archived:true},'Archiviert')){close();load()}}};
 }
 document.addEventListener('keydown',e=>{if(e.key==='Escape')$('#scrim').click()});
 load(); setInterval(()=>{ if(!$('#drawer').classList.contains('open') && document.activeElement.id!=='q') load(); }, 30000);

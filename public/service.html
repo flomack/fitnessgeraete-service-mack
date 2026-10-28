@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="de" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Problem melden – Fitnessgeräte Service Mack</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<style>
+body{min-height:100vh;display:flex;flex-direction:column}
+.bar{height:68px;display:flex;align-items:center;justify-content:space-between}
+.x{color:var(--muted);font-size:14px}
+.prog{height:4px;background:var(--line);border-radius:4px;overflow:hidden}.prog i{display:block;height:100%;width:0;background:var(--accent);transition:width .35s ease}
+main{flex:1;max-width:720px;width:100%;margin:0 auto;padding:44px 20px 140px}
+.step{animation:in .3s ease}
+@keyframes in{from{opacity:0;transform:translateY(10px)}}
+@media(prefers-reduced-motion:reduce){.step{animation:none}}
+.count{font-size:13px;font-weight:700;color:var(--accent);letter-spacing:.06em;text-transform:uppercase;margin-bottom:12px}
+h1.q{font-size:clamp(30px,6vw,46px);letter-spacing:-.04em;line-height:1.05}
+.hint{color:var(--muted);margin-top:10px}
+.opts{display:grid;gap:10px;margin-top:30px}
+.opts.two{grid-template-columns:1fr 1fr}@media(max-width:520px){.opts.two{grid-template-columns:1fr}}
+.opt{display:flex;align-items:center;gap:14px;text-align:left;width:100%;background:var(--surface);color:var(--ink);border:1.5px solid var(--line);border-radius:16px;padding:18px 20px;font:600 17px/1.3 inherit;cursor:pointer;transition:border-color .15s,transform .1s}
+.opt:hover{border-color:var(--ink)}.opt:active{transform:scale(.99)}
+.opt small{display:block;font-weight:400;color:var(--muted);font-size:14px;margin-top:2px}
+.opt.sel{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 8%,var(--surface))}
+.opt .em{font-size:22px;width:30px;text-align:center}
+.opt.urg-down.sel{border-color:#d92d20}
+label.f{display:block;margin-top:18px;font-size:14px;font-weight:600}
+input[type=text],input[type=email],input[type=tel],textarea{width:100%;margin-top:7px;padding:16px 18px;font:500 17px inherit;background:var(--surface);color:var(--ink);border:1.5px solid var(--line);border-radius:14px}
+textarea{min-height:150px;resize:vertical}
+input:focus,textarea:focus{outline:none;border-color:var(--accent)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}@media(max-width:520px){.row2{grid-template-columns:1fr}}
+.symp{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.symp button{font:500 14px inherit;padding:8px 14px;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;cursor:pointer}
+.symp button:hover{border-color:var(--ink)}
+.photos{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+.photos label,.photos .th{width:84px;height:84px;border-radius:14px;border:1.5px dashed var(--line);display:grid;place-items:center;color:var(--muted);cursor:pointer;font-size:26px;position:relative;overflow:hidden}
+.photos .th{border-style:solid;background-size:cover;background-position:center}
+.photos .th button{position:absolute;top:4px;right:4px;width:22px;height:22px;border-radius:50%;border:0;background:rgba(0,0,0,.65);color:#fff;cursor:pointer}
+.foot{position:fixed;left:0;right:0;bottom:0;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(12px);border-top:1px solid var(--line);padding:14px 20px}
+.foot .in{max-width:720px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.back{background:none;border:0;color:var(--muted);font:600 15px inherit;cursor:pointer;padding:12px 4px}
+.btn[disabled]{opacity:.35;pointer-events:none;box-shadow:none}
+.err{color:#d92d20;margin-top:14px;font-size:14px}
+.done{text-align:center;padding-top:40px}
+.done .ok{width:72px;height:72px;border-radius:50%;background:var(--ok);display:grid;place-items:center;margin:0 auto 24px}
+.done .ref{display:inline-block;margin:22px 0;padding:12px 20px;border-radius:12px;background:var(--surface);border:1px solid var(--line);font-weight:700;letter-spacing:.04em}
+.hp{position:absolute;left:-9999px}
+</style>
+</head>
+<body data-mode="service">
+<div class="wrap" style="width:100%"><div class="bar"><a class="logo" href="index.html"><img class="mk" src="mark.png" alt=""><span class="lt"><b>Fitnessgeräte</b><small>Service</small></span></a><a class="x" href="index.html">Abbrechen ✕</a></div></div>
+<div class="prog"><i id="pbar"></i></div>
+<main id="main" aria-live="polite"></main>
+<div class="foot" id="foot"><div class="in"><button class="back" id="back">← Zurück</button><button class="btn btn-primary" id="next">Weiter</button></div></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="config.js"></script>
+<script src="sb.js"></script>
+<script src="wizard.js"></script>
+
+</body></html>
