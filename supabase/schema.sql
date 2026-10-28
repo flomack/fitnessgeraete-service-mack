@@ -52,6 +52,10 @@ begin
      or length(trim(coalesce(p->>'phone',''))) = 0 or v_email !~ '^\S+@\S+\.\S+$' then
     raise exception 'Bitte Studio, Name, Telefon und gültige E-Mail angeben.';
   end if;
+  -- Vertraglich: Life-Fitness-Geräte werden nicht über dieses Formular angenommen
+  if concat_ws(' ', p->>'brand', p->>'model', p->>'description') ~* 'life[\s-]*fitness' then
+    raise exception 'LIFE_FITNESS';
+  end if;
   -- Spamschutz: höchstens 5 Meldungen pro E-Mail und Stunde
   if (select count(*) from public.tickets where email = v_email and created_at > now() - interval '1 hour') >= 5 then
     raise exception 'Zu viele Meldungen. Bitte rufen Sie uns an.';

@@ -135,7 +135,8 @@ async function next(){
     main.innerHTML = `<div class="step done"><div class="ok"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
       <h1 class="q">Danke, wir haben Ihre ${SERVICE?'Anfrage':'Meldung'}.</h1><p class="hint">Wir melden uns innerhalb von 24 Stunden bei ${esc(A.name)}.</p>
       <div class="ref">Ihre Referenz: ${j.ref}</div><br><a class="btn btn-ghost" href="/">Zur Startseite</a></div>`;
-  } catch (e) { const er = $('#err'); if (er) er.textContent = e.message + ' – oder rufen Sie uns direkt an.'; btn.disabled = false; btn.textContent = 'Meldung absenden'; }
+  } catch (e) { if (/LIFE_FITNESS/.test(e.message)) { btn.disabled = false; btn.textContent = SERVICE ? 'Anfrage absenden' : 'Meldung absenden'; return lifeModal(); }
+    const er = $('#err'); if (er) er.textContent = e.message + ' – oder rufen Sie uns direkt an.'; btn.disabled = false; btn.textContent = 'Meldung absenden'; }
 }
 $('#next').onclick = next;
 $('#back').onclick = () => { collect(); if (i) { i--; render(); } };
