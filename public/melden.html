@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="de" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Problem melden – Fitnessgeräte Service Mack</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/style.css">
+<style>
+body{min-height:100vh;display:flex;flex-direction:column}
+.bar{height:68px;display:flex;align-items:center;justify-content:space-between}
+.x{color:var(--muted);font-size:14px}
+.prog{height:4px;background:var(--line);border-radius:4px;overflow:hidden}.prog i{display:block;height:100%;width:0;background:var(--accent);transition:width .35s ease}
+main{flex:1;max-width:720px;width:100%;margin:0 auto;padding:44px 20px 140px}
+.step{animation:in .3s ease}
+@keyframes in{from{opacity:0;transform:translateY(10px)}}
+@media(prefers-reduced-motion:reduce){.step{animation:none}}
+.count{font-size:13px;font-weight:700;color:var(--accent);letter-spacing:.06em;text-transform:uppercase;margin-bottom:12px}
+h1.q{font-size:clamp(30px,6vw,46px);letter-spacing:-.04em;line-height:1.05}
+.hint{color:var(--muted);margin-top:10px}
+.opts{display:grid;gap:10px;margin-top:30px}
+.opts.two{grid-template-columns:1fr 1fr}@media(max-width:520px){.opts.two{grid-template-columns:1fr}}
+.opt{display:flex;align-items:center;gap:14px;text-align:left;width:100%;background:var(--surface);color:var(--ink);border:1.5px solid var(--line);border-radius:16px;padding:18px 20px;font:600 17px/1.3 inherit;cursor:pointer;transition:border-color .15s,transform .1s}
+.opt:hover{border-color:var(--ink)}.opt:active{transform:scale(.99)}
+.opt small{display:block;font-weight:400;color:var(--muted);font-size:14px;margin-top:2px}
+.opt.sel{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 8%,var(--surface))}
+.opt .em{font-size:22px;width:30px;text-align:center}
+.opt.urg-down.sel{border-color:#d92d20}
+label.f{display:block;margin-top:18px;font-size:14px;font-weight:600}
+input[type=text],input[type=email],input[type=tel],textarea{width:100%;margin-top:7px;padding:16px 18px;font:500 17px inherit;background:var(--surface);color:var(--ink);border:1.5px solid var(--line);border-radius:14px}
+textarea{min-height:150px;resize:vertical}
+input:focus,textarea:focus{outline:none;border-color:var(--accent)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}@media(max-width:520px){.row2{grid-template-columns:1fr}}
+.symp{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.symp button{font:500 14px inherit;padding:8px 14px;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;cursor:pointer}
+.symp button:hover{border-color:var(--ink)}
+.photos{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+.photos label,.photos .th{width:84px;height:84px;border-radius:14px;border:1.5px dashed var(--line);display:grid;place-items:center;color:var(--muted);cursor:pointer;font-size:26px;position:relative;overflow:hidden}
+.photos .th{border-style:solid;background-size:cover;background-position:center}
+.photos .th button{position:absolute;top:4px;right:4px;width:22px;height:22px;border-radius:50%;border:0;background:rgba(0,0,0,.65);color:#fff;cursor:pointer}
+.foot{position:fixed;left:0;right:0;bottom:0;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(12px);border-top:1px solid var(--line);padding:14px 20px}
+.foot .in{max-width:720px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.back{background:none;border:0;color:var(--muted);font:600 15px inherit;cursor:pointer;padding:12px 4px}
+.btn[disabled]{opacity:.35;pointer-events:none;box-shadow:none}
+.err{color:#d92d20;margin-top:14px;font-size:14px}
+.done{text-align:center;padding-top:40px}
+.done .ok{width:72px;height:72px;border-radius:50%;background:var(--ok);display:grid;place-items:center;margin:0 auto 24px}
+.done .ref{display:inline-block;margin:22px 0;padding:12px 20px;border-radius:12px;background:var(--surface);border:1px solid var(--line);font-weight:700;letter-spacing:.04em}
+.hp{position:absolute;left:-9999px}
+</style>
+</head>
+<body>
+<div class="wrap" style="width:100%"><div class="bar"><a class="logo" href="/"><img class="mk" src="/mark.png" alt=""><span class="lt"><b>Fitnessgeräte</b><small>Service</small></span></a><a class="x" href="/">Abbrechen ✕</a></div></div>
+<div class="prog"><i id="pbar"></i></div>
+<main id="main" aria-live="polite"></main>
+<div class="foot" id="foot"><div class="in"><button class="back" id="back">← Zurück</button><button class="btn btn-primary" id="next">Weiter</button></div></div>
+
+<script>
+const A = {}; // Antworten
+const BRANDS = ['Technogym','Life Fitness','Matrix','Precor','Cybex','gym80','Kettler','Hammer Strength','Star Trac','Andere / weiß nicht'];
+const SYMP = ['Lässt sich nicht einschalten','Fehlermeldung im Display','Ungewöhnliche Geräusche','Band / Seil / Riemen defekt','Display / Konsole defekt','Wackelt / lose Teile','Sitz / Polster defekt'];
+
+// Jeder Schritt: id, Frage, Typ. Reihenfolge und Fragen lassen sich hier einfach ändern.
+const SERVICE = location.pathname.replace(/\/$/,'') === '/service';
+if (!SERVICE) A.type = 'defekt';
+document.title = (SERVICE ? 'Service anfragen' : 'Problem melden') + ' – Fitnessgeräte Service Mack';
+const CAT = { id:'category', q:'Um welches Gerät geht es?', kind:'single', cols:2, opts:[
+    ['Laufband','🏃','Laufband'],['Crosstrainer / Ergometer','🚴','Crosstrainer, Bike, Rudern'],
+    ['Kraftgerät','🏋️','Kraftgerät'],['Freihantel / Zubehör','⚙️','Freihantel / Zubehör'],
+    ['Mehrere Geräte','📋','Mehrere Geräte'],['Weiß nicht','❔','Weiß ich nicht']]};
+const CONTACT = { id:'contact', q:'Wie erreichen wir Sie?', hint:'Wir melden uns innerhalb von 24 Stunden.', kind:'contact' };
+// Problem melden = nur Reparatur/Störung. Service = alles andere.
+const STEPS = SERVICE ? [
+  { id:'type', q:'Wobei können wir helfen?', hint:'Wählen Sie, was am besten passt.', kind:'single', opts:[
+    ['wartung','🔧','Wartung / Prüfung','Herstellerwartung, STK, DGUV V3, Wartungsvertrag'],
+    ['polster','🪑','Polsterarbeiten','Abholung & Neubezug nach Ihren Farbwünschen'],
+    ['umzug','🚚','Montage / Umzug / Transport','Aufbau, Neuinstallation, Einlagerung'],
+    ['verkauf','🏷️','An- & Verkauf, Vermietung','Gebrauchte Geräte, Ersatzteile, Zubehör'],
+    ['sonstiges','💬','Etwas anderes','Beratung, Gerätepark-Organisation']]},
+  CAT,
+  { id:'urgency', q:'Wann soll es stattfinden?', kind:'single', opts:[
+    ['limited','🗓️','Zeitnah','In den nächsten Wochen'],
+    ['none','🕐','Flexibel','Kein fester Termin']]},
+  { id:'description', q:'Was brauchen Sie genau?', hint:'Ein paar Stichworte reichen: Anzahl Geräte, Marken, Wunschtermin.', kind:'text' },
+  CONTACT,
+] : [
+  CAT,
+  { id:'brand', q:'Welche Marke ist es?', hint:'Das Typenschild finden Sie meist am Rahmen. Modell ist optional.', kind:'brand' },
+  { id:'urgency', q:'Wie dringend ist es?', kind:'single', opts:[
+    ['down','🔴','Gerät ist nicht nutzbar','Mitglieder sind betroffen'],
+    ['limited','🟠','Eingeschränkt nutzbar','Läuft, aber nicht richtig'],
+    ['none','🟢','Kein Zeitdruck','Wir planen voraus']]},
+  { id:'description', q:'Was genau ist passiert?', hint:'Ein paar Stichworte reichen. Ein Foto hilft uns, gleich die richtigen Teile mitzubringen.', kind:'text' },
+  CONTACT,
+];
+let i = 0; const photos = [];
+const $ = (s) => document.querySelector(s);
+const main = $('#main');
+
+function render(){
+  const s = STEPS[i];
+  $('#pbar').style.width = `${(i / STEPS.length) * 100}%`;
+  $('#back').style.visibility = i ? 'visible' : 'hidden';
+  $('#next').textContent = i === STEPS.length - 1 ? (SERVICE ? 'Anfrage absenden' : 'Meldung absenden') : 'Weiter';
+  const head = `<div class="step"><div class="count">Frage ${i+1} von ${STEPS.length}</div><h1 class="q">${s.q}</h1>${s.hint?`<p class="hint">${s.hint}</p>`:''}`;
+  let body = '';
+  if (s.kind === 'single') {
+    body = `<div class="opts ${s.cols===2?'two':''}">` + s.opts.map(([v,e,t,sub]) =>
+      `<button class="opt urg-${v} ${A[s.id]===v?'sel':''}" data-v="${v}"><span class="em">${e}</span><span>${t}${sub?`<small>${sub}</small>`:''}</span></button>`).join('') + '</div>';
+  } else if (s.kind === 'brand') {
+    body = `<div class="opts two">` + BRANDS.map(b => `<button class="opt ${A.brand===b?'sel':''}" data-v="${b}">${b}</button>`).join('') + `</div>
+      <label class="f">Modell (optional)<input type="text" id="model" value="${esc(A.model||'')}" placeholder="z. B. Run Excite 700"></label>`;
+  } else if (s.kind === 'text') {
+    body = `<label class="f" style="margin-top:28px"><span class="hp">Website</span></label><input class="hp" id="hp" tabindex="-1" autocomplete="off">
+      <textarea id="desc" placeholder="Beschreiben Sie das Problem …" aria-label="Beschreibung">${esc(A.description||'')}</textarea>
+      ${!SERVICE?`<div class="symp">${SYMP.map(x=>`<button type="button">${x}</button>`).join('')}</div>`:''}
+      <div class="photos" id="photos"></div>`;
+  } else if (s.kind === 'contact') {
+    body = `<label class="f">Studio / Firma<input type="text" id="studio" autocomplete="organization" value="${esc(A.studio||'')}"></label>
+      <div class="row2"><label class="f">Ihr Name<input type="text" id="name" autocomplete="name" value="${esc(A.name||'')}"></label>
+      <label class="f">Telefon<input type="tel" id="phone" autocomplete="tel" value="${esc(A.phone||'')}"></label></div>
+      <div class="row2"><label class="f">E-Mail<input type="email" id="email" autocomplete="email" value="${esc(A.email||'')}"></label>
+      <label class="f">PLZ &amp; Ort des Studios<input type="text" id="location" autocomplete="postal-code" value="${esc(A.location||'')}"></label></div>
+      <p class="hint" style="font-size:13px;margin-top:18px">Mit dem Absenden stimmen Sie zu, dass wir Ihre Angaben zur Bearbeitung der Anfrage speichern. Mehr in der Datenschutzerklärung.</p><div class="err" id="err"></div>`;
+  }
+  main.innerHTML = head + body + '</div>';
+  window.scrollTo(0,0);
+  bind(s); validate();
+}
+const esc = (t) => String(t).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+function bind(s){
+  if (s.kind === 'single' || s.kind === 'brand') main.querySelectorAll('.opt').forEach(b => b.onclick = () => {
+    A[s.id] = b.dataset.v; main.querySelectorAll('.opt').forEach(x => x.classList.toggle('sel', x === b));
+    validate(); if (s.kind === 'single') setTimeout(next, 220); // Einzelauswahl: automatisch weiter
+  });
+  main.querySelectorAll('input,textarea').forEach(el => el.oninput = () => { collect(); validate(); });
+  if (s.kind === 'text') {
+    main.querySelectorAll('.symp button').forEach(b => b.onclick = () => { const t = $('#desc'); t.value = (t.value ? t.value.trim() + '. ' : '') + b.textContent; collect(); validate(); });
+    drawPhotos();
+  }
+}
+function collect(){
+  for (const k of ['model','studio','name','phone','email','location']) { const el = document.getElementById(k); if (el) A[k] = el.value.trim(); }
+  const d = $('#desc'); if (d) A.description = d.value.trim();
+  const h = $('#hp'); if (h) A.website = h.value;
+}
+function valid(){
+  const s = STEPS[i];
+  if (s.kind === 'single') return !!A[s.id];
+  if (s.kind === 'brand') return !!A.brand;
+  if (s.kind === 'text') return (A.description||'').length >= 5;
+  return A.studio && A.name && A.phone && /^\S+@\S+\.\S+$/.test(A.email||'');
+}
+function validate(){ $('#next').disabled = !valid(); }
+
+function drawPhotos(){
+  const box = $('#photos'); if (!box) return;
+  box.innerHTML = photos.map((p,n)=>`<div class="th" style="background-image:url(${p})"><button aria-label="Foto entfernen" data-n="${n}">✕</button></div>`).join('') +
+    (photos.length < 3 ? `<label title="Foto hinzufügen">📷<input type="file" accept="image/*" capture="environment" multiple hidden id="file"></label>` : '');
+  box.querySelectorAll('button').forEach(b => b.onclick = () => { photos.splice(+b.dataset.n,1); drawPhotos(); });
+  const f = $('#file'); if (f) f.onchange = async () => { for (const file of [...f.files].slice(0,3-photos.length)) photos.push(await shrink(file)); drawPhotos(); };
+}
+function shrink(file){ // Foto verkleinern, damit Upload auch mobil schnell ist
+  return new Promise(res => { const img = new Image(); img.onload = () => {
+    const k = Math.min(1, 1600/Math.max(img.width,img.height)), c = document.createElement('canvas');
+    c.width = img.width*k; c.height = img.height*k; c.getContext('2d').drawImage(img,0,0,c.width,c.height); res(c.toDataURL('image/jpeg',.8)); };
+    img.src = URL.createObjectURL(file); });
+}
+
+async function next(){
+  collect(); if (!valid()) return;
+  if (i < STEPS.length - 1) { i++; render(); return; }
+  const btn = $('#next'); btn.disabled = true; btn.textContent = 'Wird gesendet …';
+  try {
+    const r = await fetch('/api/tickets', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ ...A, photos }) });
+    const j = await r.json(); if (!r.ok) throw new Error(j.error || 'Fehler');
+    $('#pbar').style.width = '100%'; $('#foot').remove();
+    main.innerHTML = `<div class="step done"><div class="ok"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
+      <h1 class="q">Danke, wir haben Ihre ${SERVICE?'Anfrage':'Meldung'}.</h1><p class="hint">Wir melden uns innerhalb von 24 Stunden bei ${esc(A.name)}.</p>
+      <div class="ref">Ihre Referenz: ${j.ref}</div><br><a class="btn btn-ghost" href="/">Zur Startseite</a></div>`;
+  } catch (e) { const er = $('#err'); if (er) er.textContent = e.message + ' – oder rufen Sie uns direkt an.'; btn.disabled = false; btn.textContent = 'Meldung absenden'; }
+}
+$('#next').onclick = next;
+$('#back').onclick = () => { collect(); if (i) { i--; render(); } };
+document.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA' && !$('#next').disabled && e.target.tagName !== 'BUTTON') next(); });
+render();
+</script>
+</body></html>

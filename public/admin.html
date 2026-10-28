@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="de" data-theme="light">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Aufträge – Fitnessgeräte Service Mack Backend</title>
+<meta name="robots" content="noindex">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/style.css">
+<style>
+body{height:100vh;display:flex;flex-direction:column;overflow:hidden}
+.login{margin:auto;width:min(380px,90vw);background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:32px}
+.login h1{font-size:26px;letter-spacing:-.03em;margin:18px 0 20px}
+input,select,textarea{font:500 15px inherit;color:var(--ink);background:var(--surface);border:1.5px solid var(--line);border-radius:12px;padding:11px 14px;width:100%}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent)}
+.hd{display:flex;align-items:center;gap:14px;padding:14px 22px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.hd .logo{margin-right:10px}
+.tools{display:flex;gap:10px;flex:1;flex-wrap:wrap;justify-content:flex-end;align-items:center}
+.tools input{width:220px}.tools select{width:auto}
+.seg{display:flex;border:1.5px solid var(--line);border-radius:12px;overflow:hidden}
+.seg button{border:0;background:none;color:var(--muted);font:600 14px inherit;padding:10px 16px;cursor:pointer}.seg .on{background:var(--ink);color:var(--bg)}
+.sm{padding:10px 16px;font-size:14px}
+.kpis{display:flex;gap:26px;padding:14px 22px;border-bottom:1px solid var(--line);font-size:14px;color:var(--muted);overflow-x:auto}
+.kpis b{color:var(--ink);font-size:20px;letter-spacing:-.02em;margin-right:6px}
+.kpis .hot b{color:var(--accent)}
+.board{flex:1;display:flex;gap:14px;padding:18px 22px;overflow:auto}
+.col{flex:0 0 290px;display:flex;flex-direction:column;background:color-mix(in srgb,var(--ink) 4%,transparent);border-radius:16px;padding:12px;max-height:100%}
+.col h3{font-size:13px;display:flex;justify-content:space-between;padding:4px 6px 12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.col .list{overflow:auto;display:flex;flex-direction:column;gap:10px;flex:1;min-height:60px}
+.col.over{outline:2px dashed var(--accent)}
+.tk{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;cursor:grab;position:relative}
+.tk:hover{border-color:var(--ink)}.tk.drag{opacity:.4}
+.tk .t1{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:6px}
+.tk b{display:block;font-size:15px;letter-spacing:-.01em}.tk p{font-size:13px;color:var(--muted);margin-top:4px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.pr{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px}.p-hoch{background:#d92d20}.p-mittel{background:#f79009}.p-niedrig{background:var(--ok)}
+.tk .meta{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}.tag{font-size:11px;font-weight:600;padding:3px 8px;border-radius:999px;background:var(--bg);border:1px solid var(--line)}
+.tbl{flex:1;overflow:auto;padding:18px 22px}
+table{width:100%;border-collapse:collapse;font-size:14px}th{text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);padding:10px;border-bottom:1px solid var(--line);cursor:pointer}
+td{padding:14px 10px;border-bottom:1px solid var(--line)}tr.r{cursor:pointer}tr.r:hover td{background:color-mix(in srgb,var(--ink) 4%,transparent)}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(520px,100vw);background:var(--surface);border-left:1px solid var(--line);box-shadow:-30px 0 60px -30px rgba(0,0,0,.3);transform:translateX(100%);transition:transform .25s;z-index:50;overflow:auto;padding:26px}
+.drawer.open{transform:none}
+.drawer h2{font-size:26px;letter-spacing:-.03em;margin:6px 0 4px}
+.dgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:20px 0}
+.dgrid label,.lab{font-size:12px;font-weight:600;color:var(--muted);display:block}.dgrid label>*{margin-top:5px}
+.box{background:var(--bg);border-radius:14px;padding:16px;margin:14px 0;font-size:15px;white-space:pre-wrap}
+.kv{display:grid;grid-template-columns:100px 1fr;gap:6px 12px;font-size:14px}.kv span{color:var(--muted)}
+.ph{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}.ph img{width:96px;height:96px;object-fit:cover;border-radius:10px;cursor:zoom-in}
+.tl{margin-top:22px;border-left:2px solid var(--line);padding-left:16px;display:flex;flex-direction:column;gap:14px;font-size:14px}.tl small{color:var(--muted);display:block}
+.tl .note{background:color-mix(in srgb,var(--accent) 10%,transparent);padding:10px 12px;border-radius:10px;white-space:pre-wrap}
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:40;display:none}.scrim.on{display:block}
+.close{float:right;background:none;border:0;font-size:22px;cursor:pointer;color:var(--muted)}
+.empty{color:var(--muted);font-size:13px;text-align:center;padding:20px 0}
+</style></head>
+<body>
+<div id="app"></div><div class="scrim" id="scrim"></div><aside class="drawer" id="drawer" aria-label="Auftrag"></aside>
+<script>
+const COLS = [['neu','Neu'],['geprueft','In Prüfung'],['termin','Termin vereinbart'],['in_arbeit','In Bearbeitung'],['teile','Wartet auf Teile'],['erledigt','Erledigt']];
+const LBL = Object.fromEntries(COLS);
+const TYPE = {defekt:'Defekt',wartung:'Wartung',polster:'Polster',umzug:'Transport/Montage',verkauf:'An-/Verkauf',sonstiges:'Sonstiges'};
+const URG = {down:'Gerät steht',limited:'Eingeschränkt',none:'Kein Zeitdruck'};
+const PRW = {hoch:0,mittel:1,niedrig:2};
+let T = [], view = localStorage.getItem('fs_view') || 'board', q = '', fp = '', sort = 'new', showDone = false;
+const $ = (s) => document.querySelector(s), app = $('#app');
+const esc = (t) => String(t ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const ref = (id) => 'T-' + String(id).padStart(4,'0');
+const ago = (iso) => { const m = (Date.now()-new Date(iso))/6e4; return m<60?`${Math.round(m)} Min.`:m<1440?`${Math.round(m/60)} Std.`:`${Math.round(m/1440)} Tg.`; };
+const api = async (u, o={}) => { const r = await fetch(u, { headers:{'Content-Type':'application/json'}, ...o }); if (r.status===401) { loginView(); throw 0; } return r.json(); };
+
+function loginView(){
+  app.innerHTML = `<form class="login" id="lf"><a class="logo"><img class="mk" src="/mark.png" alt=""><span class="lt"><b>Fitnessgeräte</b><small>Service · Backend</small></span></a><h1>Anmelden</h1>
+    <input type="password" id="pw" placeholder="Passwort" autofocus autocomplete="current-password"><p id="le" style="color:#d92d20;font-size:14px;margin:10px 0 0"></p>
+    <button class="btn btn-primary" style="margin-top:16px;width:100%;justify-content:center">Anmelden</button></form>`;
+  $('#lf').onsubmit = async (e) => { e.preventDefault(); const r = await fetch('/api/admin/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:$('#pw').value})}); r.ok ? load() : $('#le').textContent = (await r.json()).error; };
+}
+async function load(){ try { T = (await api('/api/admin/tickets')).tickets; draw(); } catch {} }
+
+function filtered(){
+  let l = T.filter(t => (showDone || t.status!=='erledigt' || view==='board') && (!fp || t.priority===fp) &&
+    (!q || [t.studio,t.name,t.brand,t.model,t.category,t.description,ref(t.id)].join(' ').toLowerCase().includes(q)));
+  const s = { new:(a,b)=>b.id-a.id, old:(a,b)=>a.id-b.id, prio:(a,b)=>PRW[a.priority]-PRW[b.priority]||a.id-b.id, studio:(a,b)=>a.studio.localeCompare(b.studio) }[sort];
+  return l.sort(s);
+}
+function draw(){
+  const open = T.filter(t=>t.status!=='erledigt'), neu = T.filter(t=>t.status==='neu'), hot = open.filter(t=>t.priority==='hoch');
+  app.innerHTML = `<div class="hd"><a class="logo"><img class="mk" src="/mark.png" alt=""><span class="lt"><b>Fitnessgeräte</b><small>Service · Aufträge</small></span></a><div class="tools">
+    <input id="q" type="search" placeholder="Suchen: Studio, Marke, Nr. …" value="${esc(q)}">
+    <select id="fp"><option value="">Alle Prioritäten</option>${['hoch','mittel','niedrig'].map(p=>`<option ${fp===p?'selected':''} value="${p}">${p[0].toUpperCase()+p.slice(1)}</option>`).join('')}</select>
+    <select id="so">${[['new','Neueste zuerst'],['old','Älteste zuerst'],['prio','Priorität'],['studio','Studio A–Z']].map(([v,l])=>`<option ${sort===v?'selected':''} value="${v}">${l}</option>`).join('')}</select>
+    <div class="seg"><button class="${view==='board'?'on':''}" data-v="board">Board</button><button class="${view==='list'?'on':''}" data-v="list">Liste</button></div>
+    <button class="btn btn-ghost sm" id="lo">Abmelden</button></div></div>
+    <div class="kpis"><span class="hot"><b>${neu.length}</b>neu</span><span><b>${open.length}</b>offen</span><span class="hot"><b>${hot.length}</b>dringend</span><span><b>${T.length-open.length}</b>erledigt</span></div>
+    ${view==='board'?boardHTML():listHTML()}`;
+  $('#q').oninput = (e) => { q = e.target.value.toLowerCase(); const p = e.target.selectionStart; draw(); const n=$('#q'); n.focus(); n.setSelectionRange(p,p); };
+  $('#fp').onchange = (e)=>{fp=e.target.value;draw()}; $('#so').onchange=(e)=>{sort=e.target.value;draw()};
+  document.querySelectorAll('.seg button').forEach(b=>b.onclick=()=>{view=b.dataset.v;localStorage.setItem('fs_view',view);draw()});
+  $('#lo').onclick = async()=>{await fetch('/api/admin/logout',{method:'POST'});loginView()};
+  document.querySelectorAll('[data-open]').forEach(el=>el.onclick=()=>openT(+el.dataset.open));
+  const sd = $('#sd'); if (sd) sd.onchange = (e)=>{showDone=e.target.checked;draw()};
+  dnd();
+}
+function card(t){
+  return `<div class="tk" draggable="true" data-id="${t.id}" data-open="${t.id}"><div class="t1"><span>${ref(t.id)}</span><span>vor ${ago(t.created_at)}</span></div>
+    <b><i class="pr p-${t.priority}"></i>${esc(t.studio)}</b><p>${esc([t.brand,t.category].filter(Boolean).join(' · '))}${t.description?' – '+esc(t.description):''}</p>
+    <div class="meta"><span class="tag">${TYPE[t.type]||t.type}</span>${t.urgency==='down'?'<span class="tag" style="color:#d92d20">Gerät steht</span>':''}${t.assignee?`<span class="tag">👤 ${esc(t.assignee)}</span>`:''}${t.due?`<span class="tag">📅 ${esc(t.due)}</span>`:''}${t.photos.length?`<span class="tag">📷 ${t.photos.length}</span>`:''}</div></div>`;
+}
+function boardHTML(){
+  const l = filtered();
+  return `<div class="board">${COLS.map(([k,n])=>{const c=l.filter(t=>t.status===k);return `<div class="col" data-s="${k}"><h3><span>${n}</span><span>${c.length}</span></h3><div class="list">${c.map(card).join('')||'<div class="empty">–</div>'}</div></div>`}).join('')}</div>`;
+}
+function listHTML(){
+  const l = filtered();
+  return `<div class="tbl"><label style="font-size:14px;color:var(--muted);display:block;margin-bottom:10px"><input type="checkbox" id="sd" style="width:auto" ${showDone?'checked':''}> Erledigte anzeigen</label>
+  <table><thead><tr><th>Nr.</th><th>Studio</th><th>Gerät</th><th>Art</th><th>Priorität</th><th>Status</th><th>Zuständig</th><th>Alter</th></tr></thead><tbody>${l.map(t=>
+    `<tr class="r" data-open="${t.id}"><td>${ref(t.id)}</td><td><b>${esc(t.studio)}</b><br><span style="color:var(--muted)">${esc(t.name)}</span></td><td>${esc([t.brand,t.category].filter(Boolean).join(' · '))}</td><td>${TYPE[t.type]||''}</td>
+    <td><i class="pr p-${t.priority}"></i>${t.priority}</td><td>${LBL[t.status]}</td><td>${esc(t.assignee)||'–'}</td><td>${ago(t.created_at)}</td></tr>`).join('')||'<tr><td colspan="8" class="empty">Keine Aufträge</td></tr>'}</tbody></table></div>`;
+}
+function dnd(){
+  let id; document.querySelectorAll('.tk').forEach(el=>{el.ondragstart=e=>{id=+el.dataset.id;el.classList.add('drag');e.dataTransfer.effectAllowed='move'};el.ondragend=()=>el.classList.remove('drag')});
+  document.querySelectorAll('.col').forEach(c=>{c.ondragover=e=>{e.preventDefault();c.classList.add('over')};c.ondragleave=()=>c.classList.remove('over');
+    c.ondrop=async e=>{e.preventDefault();c.classList.remove('over');const t=T.find(x=>x.id===id);if(!t||t.status===c.dataset.s)return;t.status=c.dataset.s;draw();
+      await api('/api/admin/tickets/'+id,{method:'PATCH',body:JSON.stringify({status:t.status})})}});
+}
+
+async function openT(id){
+  const { ticket:t, events } = await api('/api/admin/tickets/'+id);
+  const d = $('#drawer');
+  d.innerHTML = `<button class="close" id="cl" aria-label="Schließen">✕</button><div class="lab">${ref(t.id)} · ${new Date(t.created_at).toLocaleString('de-DE')}</div>
+    <h2>${esc(t.studio)}</h2><div style="color:var(--muted)">${esc([t.brand,t.model,t.category].filter(Boolean).join(' · '))}</div>
+    <div class="dgrid">
+      <label>Status<select id="st">${COLS.map(([k,n])=>`<option value="${k}" ${t.status===k?'selected':''}>${n}</option>`).join('')}</select></label>
+      <label>Priorität<select id="pr">${['hoch','mittel','niedrig'].map(p=>`<option ${t.priority===p?'selected':''}>${p}</option>`).join('')}</select></label>
+      <label>Zuständig<input id="as" value="${esc(t.assignee)}" placeholder="Techniker"></label>
+      <label>Termin<input id="du" type="date" value="${esc(t.due)}"></label></div>
+    <div class="lab">Problem · ${URG[t.urgency]||''} · ${TYPE[t.type]||''}</div><div class="box">${esc(t.description)||'–'}</div>
+    ${t.photos.length?`<div class="ph">${t.photos.map(p=>`<a href="/uploads/${p}" target="_blank"><img src="/uploads/${p}" alt="Foto"></a>`).join('')}</div>`:''}
+    <div class="kv"><span>Kontakt</span><b>${esc(t.name)}</b><span>Telefon</span><a href="tel:${esc(t.phone)}">${esc(t.phone)}</a><span>E-Mail</span><a href="mailto:${esc(t.email)}">${esc(t.email)}</a><span>Ort</span><div>${esc(t.location)||'–'}</div></div>
+    <div class="lab" style="margin-top:24px">Notiz hinzufügen</div><textarea id="nt" rows="3" placeholder="z. B. Kunde zurückgerufen, Teil bestellt …"></textarea>
+    <button class="btn btn-primary sm" id="ns" style="margin-top:10px">Notiz speichern</button>
+    <div class="tl">${events.map(e=>`<div class="${e.kind==='note'?'note':''}"><small>${new Date(e.at).toLocaleString('de-DE')}</small>${esc(e.text)}</div>`).join('')}</div>
+    <button class="btn btn-ghost sm" id="ar" style="margin-top:28px">Archivieren</button>`;
+  d.classList.add('open'); $('#scrim').classList.add('on');
+  const close = ()=>{d.classList.remove('open');$('#scrim').classList.remove('on')};
+  $('#cl').onclick = $('#scrim').onclick = close;
+  const patch = async (b)=>{await api('/api/admin/tickets/'+id,{method:'PATCH',body:JSON.stringify(b)}); await load(); openT(id)};
+  $('#st').onchange=e=>patch({status:e.target.value}); $('#pr').onchange=e=>patch({priority:e.target.value});
+  $('#as').onchange=e=>patch({assignee:e.target.value}); $('#du').onchange=e=>patch({due:e.target.value});
+  $('#ns').onclick=async()=>{const v=$('#nt').value.trim();if(!v)return;await api(`/api/admin/tickets/${id}/notes`,{method:'POST',body:JSON.stringify({text:v})});openT(id)};
+  $('#ar').onclick=async()=>{if(confirm('Auftrag archivieren?')){await api('/api/admin/tickets/'+id,{method:'PATCH',body:JSON.stringify({archived:true})});close();load()}};
+}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')$('#scrim').click()});
+load(); setInterval(()=>{ if(!$('#drawer').classList.contains('open') && document.activeElement.id!=='q') load(); }, 30000);
+</script></body></html>
