@@ -47,6 +47,10 @@ input:focus,textarea:focus{outline:none;border-color:var(--accent)}
 .done .ok{width:72px;height:72px;border-radius:50%;background:var(--ok);display:grid;place-items:center;margin:0 auto 24px}
 .done .ref{display:inline-block;margin:22px 0;padding:12px 20px;border-radius:12px;background:var(--surface);border:1px solid var(--line);font-weight:700;letter-spacing:.04em}
 .hp{position:absolute;left:-9999px}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:grid;place-items:center;padding:20px;z-index:100}
+.modal .box{background:var(--surface);border-radius:22px;padding:32px;max-width:440px;width:100%;display:flex;flex-direction:column;gap:14px;text-align:center}
+.modal .em{font-size:34px}.modal h2{font-size:24px;letter-spacing:-.03em;line-height:1.15}.modal p{color:var(--muted)}
+.modal .btn{justify-content:center}
 </style>
 </head>
 <body data-mode="service">

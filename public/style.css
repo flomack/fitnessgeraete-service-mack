@@ -115,3 +115,4 @@ footer .wrap{display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap}
 footer a:hover{color:var(--ink)}
 
 .navbtns{display:flex;gap:8px}
+.brandrow{display:flex;flex-wrap:wrap;gap:12px 40px;align-items:baseline;font-weight:800;font-size:clamp(24px,4vw,34px);letter-spacing:-.03em;color:var(--ink)}.brandrow .more{font-size:16px;font-weight:500;color:var(--muted);letter-spacing:0}

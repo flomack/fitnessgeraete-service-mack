@@ -1,5 +1,6 @@
 const A = {}; // Antworten
-const BRANDS = ['Technogym','Life Fitness','Matrix','Precor','Cybex','gym80','Kettler','Hammer Strength','Star Trac','Andere / weiß nicht'];
+const BRANDS = ['Technogym','Matrix','Life Fitness','Andere Marke / weiß nicht'];
+const LIFE = 'Life Fitness', LIFE_URL = 'https://www.lifefitness.com/de-de/kundendienst';
 const SYMP = ['Lässt sich nicht einschalten','Fehlermeldung im Display','Ungewöhnliche Geräusche','Band / Seil / Riemen defekt','Display / Konsole defekt','Wackelt / lose Teile','Sitz / Polster defekt'];
 
 // Jeder Schritt: id, Frage, Typ. Reihenfolge und Fragen lassen sich hier einfach ändern.
@@ -20,6 +21,7 @@ const STEPS = SERVICE ? [
     ['verkauf','🏷️','An- & Verkauf, Vermietung','Gebrauchte Geräte, Ersatzteile, Zubehör'],
     ['sonstiges','💬','Etwas anderes','Beratung, Gerätepark-Organisation']]},
   CAT,
+  { id:'brand', q:'Welche Marke ist es?', hint:'Das Typenschild finden Sie meist am Rahmen. Modell ist optional.', kind:'brand' },
   { id:'urgency', q:'Wann soll es stattfinden?', kind:'single', opts:[
     ['limited','🗓️','Zeitnah','In den nächsten Wochen'],
     ['none','🕐','Flexibel','Kein fester Termin']]},
@@ -73,6 +75,7 @@ const esc = (t) => String(t).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>
 
 function bind(s){
   if (s.kind === 'single' || s.kind === 'brand') main.querySelectorAll('.opt').forEach(b => b.onclick = () => {
+    if (s.kind === 'brand' && b.dataset.v === LIFE) { A.brand = ''; main.querySelectorAll('.opt').forEach(x => x.classList.remove('sel')); validate(); return lifeModal(); }
     A[s.id] = b.dataset.v; main.querySelectorAll('.opt').forEach(x => x.classList.toggle('sel', x === b));
     validate(); if (s.kind === 'single') setTimeout(next, 220); // Einzelauswahl: automatisch weiter
   });
@@ -138,3 +141,19 @@ $('#next').onclick = next;
 $('#back').onclick = () => { collect(); if (i) { i--; render(); } };
 document.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA' && !$('#next').disabled && e.target.tagName !== 'BUTTON') next(); });
 render();
+
+// Life Fitness: Meldungen müssen aus vertraglichen Gründen direkt an Life Fitness gehen.
+function lifeModal(){
+  const m = document.createElement('div'); m.className = 'modal'; m.setAttribute('role','dialog'); m.setAttribute('aria-modal','true');
+  m.innerHTML = `<div class="box"><div class="em">ℹ️</div><h2>Für Life Fitness bitte direkt zum Hersteller</h2>
+    <p>Geräte der Marke Life Fitness betreuen wir aus vertraglichen Gründen nicht selbst. Bitte wenden Sie sich an den offiziellen Life Fitness Kundendienst – dort erhalten Sie Hilfe für Ihr Gerät.</p>
+    <a class="btn btn-primary" id="lfgo" href="${LIFE_URL}" target="_blank" rel="noopener">Zum Life Fitness Kundendienst ↗</a>
+    <button class="btn btn-ghost" id="lfno">Andere Marke wählen</button></div>`;
+  document.body.appendChild(m);
+  const close = () => { m.remove(); document.removeEventListener('keydown', esc); };
+  const esc = (e) => { if (e.key === 'Escape') close(); };
+  document.addEventListener('keydown', esc);
+  m.onclick = (e) => { if (e.target === m) close(); };
+  m.querySelector('#lfno').onclick = close;
+  m.querySelector('#lfno').focus();
+}
