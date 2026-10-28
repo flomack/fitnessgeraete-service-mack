@@ -115,4 +115,6 @@ footer .wrap{display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap}
 footer a:hover{color:var(--ink)}
 
 .navbtns{display:flex;gap:8px}
-.brandrow{display:flex;flex-wrap:wrap;gap:12px 40px;align-items:baseline;font-weight:800;font-size:clamp(24px,4vw,34px);letter-spacing:-.03em;color:var(--ink)}.brandrow .more{font-size:16px;font-weight:500;color:var(--muted);letter-spacing:0}
+.brandrow{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.brandrow span{display:inline-block;margin:0 12px 12px 0;padding:14px 26px;background:var(--surface);border:1px solid var(--line);border-radius:999px;font-weight:800;font-size:20px;letter-spacing:-.02em;color:var(--ink)}
+.brandrow span.more{background:none;border:0;padding:14px 4px;font-size:16px;font-weight:500;color:var(--muted);letter-spacing:0}
