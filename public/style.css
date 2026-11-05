@@ -1,3 +1,8 @@
+@font-face{font-family:'Inter';font-weight:400;font-style:normal;font-display:swap;src:url(fonts/inter-400.woff2) format('woff2')}
+@font-face{font-family:'Inter';font-weight:500;font-style:normal;font-display:swap;src:url(fonts/inter-500.woff2) format('woff2')}
+@font-face{font-family:'Inter';font-weight:600;font-style:normal;font-display:swap;src:url(fonts/inter-600.woff2) format('woff2')}
+@font-face{font-family:'Inter';font-weight:700;font-style:normal;font-display:swap;src:url(fonts/inter-700.woff2) format('woff2')}
+@font-face{font-family:'Inter';font-weight:800;font-style:normal;font-display:swap;src:url(fonts/inter-800.woff2) format('woff2')}
 :root{
   --bg:#F6F5F2; --surface:#FFFFFF; --ink:#333333; --muted:#6B6E72; --line:#E4E2DC;
   --accent:#A70A0B; --accent-ink:#fff; --dark:#333333; --ok:#1F9D63;
@@ -119,3 +124,12 @@ footer a:hover{color:var(--ink)}
 .bw-label{font:700 15px Inter,system-ui,sans-serif;fill:var(--ink)}
 @media(prefers-reduced-motion:no-preference){.bw-ring{animation:pulse 2.8s ease-out infinite;transform-origin:center;transform-box:fill-box}}
 @keyframes pulse{0%{transform:scale(.5);opacity:.7}100%{transform:scale(1.6);opacity:0}}
+
+/* Rechtliche Seiten */
+.legal{max-width:760px;margin:0 auto;padding:48px 20px 96px}
+.legal h1{font-size:clamp(34px,6vw,52px);margin-bottom:8px}
+.legal h2{font-size:22px;letter-spacing:-.02em;margin:40px 0 10px;max-width:none}
+.legal h3{font-size:17px;margin:22px 0 6px}
+.legal p,.legal li{color:var(--ink);font-size:16px;margin:10px 0;line-height:1.65}
+.legal ul{padding-left:22px}.legal a{text-decoration:underline;text-underline-offset:3px}
+.legal .stand{color:var(--muted);font-size:14px}

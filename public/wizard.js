@@ -73,7 +73,7 @@ function render(){
       <label class="f">Telefon<input type="tel" id="phone" autocomplete="tel" value="${esc(A.phone||'')}"></label></div>
       <div class="row2"><label class="f">E-Mail<input type="email" id="email" autocomplete="email" value="${esc(A.email||'')}"></label>
       <label class="f">PLZ &amp; Ort des Studios<input type="text" id="location" autocomplete="postal-code" value="${esc(A.location||'')}"></label></div>
-      <p class="hint" style="font-size:13px;margin-top:18px">Mit dem Absenden stimmen Sie zu, dass wir Ihre Angaben zur Bearbeitung der Anfrage speichern. Mehr in der Datenschutzerklärung.</p><div class="err" id="err"></div>`;
+      <p class="hint" style="font-size:13px;margin-top:18px">Wir verwenden Ihre Angaben nur, um Ihre Anfrage zu bearbeiten. Mehr in der <a href="datenschutz.html" target="_blank" rel="noopener" style="text-decoration:underline">Datenschutzerklärung</a>.</p><div class="err" id="err"></div>`;
   }
   main.innerHTML = head + body + '</div>';
   window.scrollTo(0,0);

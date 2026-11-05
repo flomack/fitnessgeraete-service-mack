@@ -4,14 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Problem melden – Fitnessgeräte Service Mack</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=4">
+<link rel="stylesheet" href="style.css?v=5">
 <style>
 body{min-height:100vh;display:flex;flex-direction:column}
 .bar{height:68px;display:flex;align-items:center;justify-content:space-between}
 .x{color:var(--muted);font-size:14px}
 .prog{height:4px;background:var(--line);border-radius:4px;overflow:hidden}.prog i{display:block;height:100%;width:0;background:var(--accent);transition:width .35s ease}
-main{flex:1;max-width:720px;width:100%;margin:0 auto;padding:44px 20px 140px}
+main{flex:1;max-width:720px;width:100%;margin:0 auto;padding:44px 20px 30px}
+.lf{text-align:center;font-size:13px;color:var(--muted);margin:0 0 110px}.lf a{text-decoration:underline;text-underline-offset:3px}
 .step{animation:in .3s ease}
 @keyframes in{from{opacity:0;transform:translateY(10px)}}
 @media(prefers-reduced-motion:reduce){.step{animation:none}}
@@ -57,11 +57,12 @@ input:focus,textarea:focus{outline:none;border-color:var(--accent)}
 <div class="wrap" style="width:100%"><div class="bar"><a class="logo" href="index.html"><img class="mk" src="mark.png" alt=""><span class="lt"><b>Fitnessgeräte</b><small>Service</small></span></a><a class="x" href="index.html">Abbrechen ✕</a></div></div>
 <div class="prog"><i id="pbar"></i></div>
 <main id="main" aria-live="polite"></main>
+<div class="lf"><a href="impressum.html">Impressum</a> · <a href="datenschutz.html">Datenschutz</a></div>
 <div class="foot" id="foot"><div class="in"><button class="back" id="back">← Zurück</button><button class="btn btn-primary" id="next">Weiter</button></div></div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="vendor/supabase.min.js"></script>
 <script src="config.js"></script>
 <script src="sb.js"></script>
-<script src="wizard.js?v=6"></script>
+<script src="wizard.js?v=7"></script>
 
 </body></html>
