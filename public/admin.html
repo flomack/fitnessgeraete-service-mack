@@ -196,13 +196,16 @@ async function openBrands(){
     <div class="lab" style="margin-top:24px">Marke hinzufügen</div>
     <input id="bn" placeholder="Name, z. B. Technogym" maxlength="60" style="margin-top:6px">
     <label style="display:flex;gap:8px;align-items:center;font-size:14px;margin-top:12px"><input type="checkbox" id="br" style="width:auto"> Nicht selbst betreuen: Kunden zum Hersteller schicken</label>
-    <input id="bu" type="url" placeholder="https://… Link zum Kundendienst des Herstellers" style="margin-top:8px;display:none">
+    <div id="bw" style="display:none"><input id="bu" type="url" placeholder="https://… Link zum Kundendienst des Herstellers" style="margin-top:8px">
+      <p style="font-size:13px;color:var(--muted);margin-top:6px">Link nicht zur Hand? <a id="bs" target="_blank" rel="noopener" style="text-decoration:underline">Beim Hersteller suchen ↗</a> – oder schreib Claude den Markennamen, dann wird der Link gesucht und eingetragen.</p></div>
     <p id="be" style="color:#d92d20;font-size:14px;margin-top:8px"></p>
     <button class="btn btn-primary sm" id="ba" style="margin-top:6px">Hinzufügen</button>`;
   d.classList.add('open'); $('#scrim').classList.add('on');
   const close = ()=>{d.classList.remove('open');$('#scrim').classList.remove('on')};
   $('#cl').onclick = $('#scrim').onclick = close;
-  $('#br').onchange = e => $('#bu').style.display = e.target.checked ? 'block' : 'none';
+  const sl = () => $('#bs').href = 'https://www.google.com/search?q=' + encodeURIComponent(($('#bn').value.trim() || 'Hersteller') + ' Kundendienst Service offizielle Website');
+  $('#bn').oninput = sl; sl();
+  $('#br').onchange = e => $('#bw').style.display = e.target.checked ? 'block' : 'none';
   $('#ba').onclick = async () => {
     const name = $('#bn').value.trim(), red = $('#br').checked ? $('#bu').value.trim() : null;
     if (!name) return $('#be').textContent = 'Bitte einen Namen eingeben.';
