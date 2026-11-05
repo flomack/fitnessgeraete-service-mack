@@ -1,6 +1,13 @@
 const A = {}; // Antworten
-const BRANDS = ['Technogym','Matrix','Life Fitness','Andere Marke / weiß nicht'];
-const LIFE = 'Life Fitness', LIFE_URL = 'https://www.lifefitness.com/de-de/kundendienst';
+const OTHER = 'Andere Marke / weiß nicht';
+const LIFE_URL = 'https://www.lifefitness.com/de-de/kundendienst';
+// Marken werden im Backend gepflegt. Rückfall, falls die Datenbank nicht antwortet:
+let BRANDS = [{ name:'Technogym' }, { name:'Matrix' }, { name:'Life Fitness', redirect_url: LIFE_URL }];
+async function loadBrands(){
+  if (!window.sbReady) return;
+  const { data, error } = await sb.from('brands').select('name, redirect_url').order('sort').order('id');
+  if (!error && data && data.length) { BRANDS = data; if (typeof STEPS !== 'undefined' && STEPS[i] && STEPS[i].kind === 'brand') render(); }
+}
 const SYMP = ['Lässt sich nicht einschalten','Fehlermeldung im Display','Ungewöhnliche Geräusche','Band / Seil / Riemen defekt','Display / Konsole defekt','Wackelt / lose Teile','Sitz / Polster defekt'];
 
 // Jeder Schritt: id, Frage, Typ. Reihenfolge und Fragen lassen sich hier einfach ändern.
@@ -52,7 +59,7 @@ function render(){
     body = `<div class="opts ${s.cols===2?'two':''}">` + s.opts.map(([v,e,t,sub]) =>
       `<button class="opt urg-${v} ${A[s.id]===v?'sel':''}" data-v="${v}"><span class="em">${e}</span><span>${t}${sub?`<small>${sub}</small>`:''}</span></button>`).join('') + '</div>';
   } else if (s.kind === 'brand') {
-    body = `<div class="opts two">` + BRANDS.map(b => `<button class="opt ${A.brand===b?'sel':''}" data-v="${b}">${b}</button>`).join('') + `</div>
+    body = `<div class="opts two">` + BRANDS.concat([{ name: OTHER }]).map(b => `<button class="opt ${A.brand===b.name?'sel':''}" data-v="${esc(b.name)}">${esc(b.name)}</button>`).join('') + `</div>
       <label class="f">Modell (optional)<input type="text" id="model" value="${esc(A.model||'')}" placeholder="z. B. Run Excite 700"></label>`;
   } else if (s.kind === 'text') {
     body = `<label class="f" style="margin-top:28px"><span class="hp">Website</span></label><input class="hp" id="hp" tabindex="-1" autocomplete="off">
@@ -75,7 +82,8 @@ const esc = (t) => String(t).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>
 
 function bind(s){
   if (s.kind === 'single' || s.kind === 'brand') main.querySelectorAll('.opt').forEach(b => b.onclick = () => {
-    if (s.kind === 'brand' && b.dataset.v === LIFE) { A.brand = ''; main.querySelectorAll('.opt').forEach(x => x.classList.remove('sel')); validate(); return lifeModal(); }
+    const red = s.kind === 'brand' && BRANDS.find(x => x.name === b.dataset.v && x.redirect_url);
+    if (red) { A.brand = ''; main.querySelectorAll('.opt').forEach(x => x.classList.remove('sel')); validate(); return brandModal(red.name, red.redirect_url); }
     A[s.id] = b.dataset.v; main.querySelectorAll('.opt').forEach(x => x.classList.toggle('sel', x === b));
     validate(); if (s.kind === 'single') setTimeout(next, 220); // Einzelauswahl: automatisch weiter
   });
@@ -135,7 +143,8 @@ async function next(){
     main.innerHTML = `<div class="step done"><div class="ok"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
       <h1 class="q">Danke, wir haben Ihre ${SERVICE?'Anfrage':'Meldung'}.</h1><p class="hint">Wir melden uns innerhalb von 24 Stunden bei ${esc(A.name)}.</p>
       <div class="ref">Ihre Referenz: ${j.ref}</div><br><a class="btn btn-ghost" href="/">Zur Startseite</a></div>`;
-  } catch (e) { if (/LIFE_FITNESS/.test(e.message)) { btn.disabled = false; btn.textContent = SERVICE ? 'Anfrage absenden' : 'Meldung absenden'; return lifeModal(); }
+  } catch (e) { if (/LIFE_FITNESS|BRAND_REDIRECT/.test(e.message)) { btn.disabled = false; btn.textContent = SERVICE ? 'Anfrage absenden' : 'Meldung absenden';
+      const r = BRANDS.find(x => x.redirect_url && x.name === A.brand) || BRANDS.find(x => x.redirect_url) || { name:'Life Fitness', redirect_url: LIFE_URL }; return brandModal(r.name, r.redirect_url); }
     const er = $('#err'); if (er) er.textContent = e.message + ' – oder rufen Sie uns direkt an.'; btn.disabled = false; btn.textContent = 'Meldung absenden'; }
 }
 $('#next').onclick = next;
@@ -143,18 +152,19 @@ $('#back').onclick = () => { collect(); if (i) { i--; render(); } };
 document.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA' && !$('#next').disabled && e.target.tagName !== 'BUTTON') next(); });
 render();
 
-// Life Fitness: Meldungen müssen aus vertraglichen Gründen direkt an Life Fitness gehen.
-function lifeModal(){
+// Marken mit Weiterleitung (z. B. Life Fitness, vertraglich): Pop-up mit Link zum Hersteller.
+function brandModal(name, url){
   const m = document.createElement('div'); m.className = 'modal'; m.setAttribute('role','dialog'); m.setAttribute('aria-modal','true');
-  m.innerHTML = `<div class="box"><div class="em">ℹ️</div><h2>Für Life Fitness bitte direkt zum Hersteller</h2>
-    <p>Geräte der Marke Life Fitness betreuen wir aus vertraglichen Gründen nicht selbst. Bitte wenden Sie sich an den offiziellen Life Fitness Kundendienst – dort erhalten Sie Hilfe für Ihr Gerät.</p>
-    <a class="btn btn-primary" id="lfgo" href="${LIFE_URL}" target="_blank" rel="noopener">Zum Life Fitness Kundendienst ↗</a>
+  m.innerHTML = `<div class="box"><div class="em">ℹ️</div><h2>Für ${esc(name)} bitte direkt zum Hersteller</h2>
+    <p>Geräte der Marke ${esc(name)} betreuen wir aus vertraglichen Gründen nicht selbst. Bitte wenden Sie sich an den offiziellen Kundendienst des Herstellers – dort erhalten Sie Hilfe für Ihr Gerät.</p>
+    <a class="btn btn-primary" id="lfgo" href="${esc(url)}" target="_blank" rel="noopener">Zum ${esc(name)} Kundendienst ↗</a>
     <button class="btn btn-ghost" id="lfno">Andere Marke wählen</button></div>`;
   document.body.appendChild(m);
-  const close = () => { m.remove(); document.removeEventListener('keydown', esc); };
-  const esc = (e) => { if (e.key === 'Escape') close(); };
-  document.addEventListener('keydown', esc);
+  const close = () => { m.remove(); document.removeEventListener('keydown', esc2); };
+  const esc2 = (e) => { if (e.key === 'Escape') close(); };
+  document.addEventListener('keydown', esc2);
   m.onclick = (e) => { if (e.target === m) close(); };
   m.querySelector('#lfno').onclick = close;
   m.querySelector('#lfno').focus();
 }
+loadBrands();

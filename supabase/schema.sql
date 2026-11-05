@@ -39,6 +39,21 @@ create policy "admins tickets" on public.tickets       for all to authenticated 
 create policy "admins events"  on public.ticket_events for all to authenticated using (public.is_admin()) with check (public.is_admin());
 create policy "admin sieht sich" on public.admins for select to authenticated using (user_id = auth.uid());
 
+-- Marken für das Meldeformular (im Backend pflegbar). Mit redirect_url: Besucher werden zum Hersteller verwiesen.
+create table public.brands (
+  id           bigint generated always as identity primary key,
+  name         text not null unique check (length(trim(name)) between 1 and 60),
+  redirect_url text check (redirect_url is null or redirect_url ~ '^https://[^\s]+$'),
+  sort         int not null default 0,
+  created_at   timestamptz not null default now()
+);
+alter table public.brands enable row level security;
+create policy "alle lesen marken" on public.brands for select to anon, authenticated using (true);
+create policy "admins pflegen marken" on public.brands for all to authenticated using (public.is_admin()) with check (public.is_admin());
+insert into public.brands (name, redirect_url, sort) values
+  ('Technogym', null, 1), ('Matrix', null, 2),
+  ('Life Fitness', 'https://www.lifefitness.com/de-de/kundendienst', 3);
+
 -- Neue Meldung von der Website: einzige Schreib-Möglichkeit für Besucher, mit Prüfungen.
 create function public.submit_ticket(p jsonb) returns jsonb
 language plpgsql security definer set search_path = '' as $$
@@ -51,6 +66,10 @@ begin
   if length(trim(coalesce(p->>'name',''))) = 0 or length(trim(coalesce(p->>'studio',''))) = 0
      or length(trim(coalesce(p->>'phone',''))) = 0 or v_email !~ '^\S+@\S+\.\S+$' then
     raise exception 'Bitte Studio, Name, Telefon und gültige E-Mail angeben.';
+  end if;
+  -- Marken mit Weiterleitung (im Backend gesetzt) werden nicht angenommen
+  if exists (select 1 from public.brands where redirect_url is not null and lower(name) = lower(trim(coalesce(p->>'brand','')))) then
+    raise exception 'BRAND_REDIRECT';
   end if;
   -- Vertraglich: Life-Fitness-Geräte werden nicht über dieses Formular angenommen
   if concat_ws(' ', p->>'brand', p->>'model', p->>'description') ~* 'life[\s-]*fitness' then
