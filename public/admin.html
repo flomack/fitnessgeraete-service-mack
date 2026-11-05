@@ -4,7 +4,7 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Aufträge – Fitnessgeräte Service Mack Backend</title>
 <meta name="robots" content="noindex">
-<link rel="stylesheet" href="style.css?v=5">
+<link rel="stylesheet" href="style.css?v=7">
 <style>
 body{height:100vh;display:flex;flex-direction:column;overflow:hidden}
 .login{margin:auto;width:min(380px,90vw);background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:32px}
@@ -82,7 +82,7 @@ async function update(id, patch, evText){
 }
 
 function loginView(msg=''){
-  app.innerHTML = `<form class="login" id="lf"><a class="logo"><img class="mk" src="mark.png" alt=""><span class="lt"><b>Fitnessgeräte</b><small>Service · Backend</small></span></a><h1>Anmelden</h1>
+  app.innerHTML = `<form class="login" id="lf"><a class="logo"><img class="mk" src="mark.png?v=2" alt=""><span class="lt"><b>Fitnessgeräte</b><small>Service · Backend</small></span></a><h1>Anmelden</h1>
     <input type="email" id="em" placeholder="E-Mail" autofocus autocomplete="username" style="margin-bottom:10px">
     <input type="password" id="pw" placeholder="Passwort" autocomplete="current-password"><p id="le" style="color:#d92d20;font-size:14px;margin:10px 0 0">${esc(msg)}</p>
     <button class="btn btn-primary" style="margin-top:16px;width:100%;justify-content:center">Anmelden</button></form>`;
@@ -111,7 +111,7 @@ function filtered(){
 }
 function draw(){
   const open = T.filter(t=>t.status!=='erledigt' && t.status!=='weitergeleitet'), neu = T.filter(t=>t.status==='neu'), hot = open.filter(t=>t.priority==='hoch');
-  app.innerHTML = `<div class="hd"><a class="logo"><img class="mk" src="mark.png" alt=""><span class="lt"><b>Fitnessgeräte</b><small>Service · Aufträge</small></span></a><div class="tools">
+  app.innerHTML = `<div class="hd"><a class="logo"><img class="mk" src="mark.png?v=2" alt=""><span class="lt"><b>Fitnessgeräte</b><small>Service · Aufträge</small></span></a><div class="tools">
     <input id="q" type="search" placeholder="Suchen: Studio, Marke, Nr. …" value="${esc(q)}">
     <select id="fp"><option value="">Alle Prioritäten</option>${['hoch','mittel','niedrig'].map(p=>`<option ${fp===p?'selected':''} value="${p}">${p[0].toUpperCase()+p.slice(1)}</option>`).join('')}</select>
     <select id="so">${[['new','Neueste zuerst'],['old','Älteste zuerst'],['prio','Priorität'],['studio','Studio A–Z']].map(([v,l])=>`<option ${sort===v?'selected':''} value="${v}">${l}</option>`).join('')}</select>

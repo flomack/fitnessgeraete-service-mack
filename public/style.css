@@ -29,7 +29,7 @@ a{color:inherit;text-decoration:none}
 nav.top{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--bg) 85%,transparent);backdrop-filter:blur(14px);border-bottom:1px solid transparent}
 nav.top .wrap{display:flex;align-items:center;justify-content:space-between;height:68px}
 .logo{display:flex;align-items:center;gap:12px}
-.logo .mk{height:42px;width:auto;mix-blend-mode:multiply;flex:none}
+.logo .mk{height:42px;width:auto;flex:none}
 .lt{display:flex;flex-direction:column;line-height:1}.lt b{font-size:15px;font-weight:800;letter-spacing:.2em;text-transform:uppercase;color:#333}.lt small{font-size:10.5px;font-weight:800;letter-spacing:.42em;text-transform:uppercase;color:var(--accent);margin-top:5px}
 .links{display:flex;gap:28px;font-size:15px;color:var(--muted)}
 .links a:hover{color:var(--ink)}
@@ -133,3 +133,23 @@ footer a:hover{color:var(--ink)}
 .legal p,.legal li{color:var(--ink);font-size:16px;margin:10px 0;line-height:1.65}
 .legal ul{padding-left:22px}.legal a{text-decoration:underline;text-underline-offset:3px}
 .legal .stand{color:var(--muted);font-size:14px}
+
+/* Handy */
+html,body{overflow-x:clip}
+@media(max-width:560px){
+  .wrap{padding:0 16px}
+  nav.top .wrap{height:60px}
+  .logo{gap:8px}.logo .mk{height:30px}
+  .lt b{font-size:11.5px;letter-spacing:.14em}.lt small{font-size:9px;letter-spacing:.3em;margin-top:4px}
+  .navbtns .btn-ghost{display:none}
+  nav.top .btn{padding:10px 14px;font-size:13px;white-space:nowrap}
+  .hero{padding:40px 0 36px}
+  .lead{margin:20px 0 28px}
+  .cta-row{gap:10px}.cta-row .btn-lg{flex:1 1 100%;justify-content:center;padding:18px 24px}
+  section{padding:64px 0}
+  .band{margin:0 16px;padding:48px 22px;border-radius:22px}
+  .band .cta-row .btn{flex:1 1 100%}
+  .facts div{padding:20px 14px}.facts b{font-size:22px}
+  footer .wrap{flex-direction:column}
+}
+button,input,textarea,select{font-family:inherit}
