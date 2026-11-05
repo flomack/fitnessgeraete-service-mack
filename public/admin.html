@@ -183,7 +183,8 @@ async function openT(id){
 
 // ---------- Marken verwalten (erscheinen im Meldeformular) ----------
 async function openBrands(){
-  const { data: brands = [], error } = await sb.from('brands').select('*').order('sort').order('id');
+  const res = await sb.from('brands').select('*').order('sort').order('id');
+  const brands = res.data || [], error = res.error;
   const d = $('#drawer');
   d.innerHTML = `<button class="close" id="cl" aria-label="Schließen">✕</button><div class="lab">Meldeformular</div><h2>Marken</h2>
     <p style="color:var(--muted);font-size:14px;margin-bottom:10px">Diese Marken sehen Kunden im Formular. „Andere Marke / weiß nicht“ steht immer zusätzlich am Ende.</p>
