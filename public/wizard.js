@@ -60,6 +60,7 @@ function render(){
       `<button class="opt urg-${v} ${A[s.id]===v?'sel':''}" data-v="${v}"><span class="em">${e}</span><span>${t}${sub?`<small>${sub}</small>`:''}</span></button>`).join('') + '</div>';
   } else if (s.kind === 'brand') {
     body = `<div class="opts two">` + BRANDS.concat([{ name: OTHER }]).map(b => `<button class="opt ${A.brand===b.name?'sel':''}" data-v="${esc(b.name)}">${esc(b.name)}</button>`).join('') + `</div>
+      <p class="hint" id="rn" style="margin-top:16px"></p>
       <label class="f">Modell (optional)<input type="text" id="model" value="${esc(A.model||'')}" placeholder="z. B. Run Excite 700"></label>`;
   } else if (s.kind === 'text') {
     body = `<label class="f" style="margin-top:28px"><span class="hp">Website</span></label><input class="hp" id="hp" tabindex="-1" autocomplete="off">
@@ -76,15 +77,19 @@ function render(){
   }
   main.innerHTML = head + body + '</div>';
   window.scrollTo(0,0);
-  bind(s); validate();
+  bind(s); validate(); if (s.kind === 'brand') brandHint();
 }
 const esc = (t) => String(t).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
+function brandHint(){
+  const r = $('#rn'); if (!r) return;
+  const red = BRANDS.find(x => x.name === A.brand && x.redirect_url);
+  r.textContent = red ? `Hinweis: Geräte von ${red.name} betreuen wir vertraglich nicht selbst. Sie können Ihre Angaben trotzdem abschicken, am Ende leiten wir Sie direkt an ${red.name} weiter.` : '';
+}
 function bind(s){
   if (s.kind === 'single' || s.kind === 'brand') main.querySelectorAll('.opt').forEach(b => b.onclick = () => {
-    const red = s.kind === 'brand' && BRANDS.find(x => x.name === b.dataset.v && x.redirect_url);
-    if (red) { A.brand = ''; main.querySelectorAll('.opt').forEach(x => x.classList.remove('sel')); validate(); return brandModal(red.name, red.redirect_url); }
     A[s.id] = b.dataset.v; main.querySelectorAll('.opt').forEach(x => x.classList.toggle('sel', x === b));
+    if (s.kind === 'brand') brandHint();
     validate(); if (s.kind === 'single') setTimeout(next, 220); // Einzelauswahl: automatisch weiter
   });
   main.querySelectorAll('input,textarea').forEach(el => el.oninput = () => { collect(); validate(); });
@@ -140,11 +145,19 @@ async function next(){
       var j = res.data;
     }
     $('#pbar').style.width = '100%'; $('#foot').remove();
-    main.innerHTML = `<div class="step done"><div class="ok"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
-      <h1 class="q">Danke, wir haben Ihre ${SERVICE?'Anfrage':'Meldung'}.</h1><p class="hint">Wir melden uns innerhalb von 24 Stunden bei ${esc(A.name)}.</p>
-      <div class="ref">Ihre Referenz: ${j.ref}</div><br><a class="btn btn-ghost" href="/">Zur Startseite</a></div>`;
-  } catch (e) { if (/LIFE_FITNESS|BRAND_REDIRECT/.test(e.message)) { btn.disabled = false; btn.textContent = SERVICE ? 'Anfrage absenden' : 'Meldung absenden';
-      const r = BRANDS.find(x => x.redirect_url && x.name === A.brand) || BRANDS.find(x => x.redirect_url) || { name:'Life Fitness', redirect_url: LIFE_URL }; return brandModal(r.name, r.redirect_url); }
+    const ok = '<div class="ok"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>';
+    if (j.redirect_url) {
+      // Marke mit Vertrag: Angaben sind gespeichert, der Kunde wird an den Hersteller verwiesen.
+      main.innerHTML = `<div class="step done">${ok}<h1 class="q">Bitte wenden Sie sich direkt an ${esc(j.redirect_name)}.</h1>
+        <p class="hint">Vielen Dank für Ihre Angaben. Geräte der Marke ${esc(j.redirect_name)} betreuen wir aus vertraglichen Gründen nicht selbst. Den Service erhalten Sie direkt beim Hersteller.</p>
+        <a class="btn btn-primary btn-lg" style="margin-top:28px" href="${esc(j.redirect_url)}" target="_blank" rel="noopener">Zum ${esc(j.redirect_name)} Kundendienst ↗</a>
+        <div class="ref" style="margin-top:28px">Referenz: ${j.ref}</div><br><a class="btn btn-ghost" href="index.html">Zur Startseite</a></div>`;
+    } else {
+      main.innerHTML = `<div class="step done">${ok}
+        <h1 class="q">Danke, wir haben Ihre ${SERVICE?'Anfrage':'Meldung'}.</h1><p class="hint">Wir melden uns innerhalb von 24 Stunden bei ${esc(A.name)}.</p>
+        <div class="ref">Ihre Referenz: ${j.ref}</div><br><a class="btn btn-ghost" href="index.html">Zur Startseite</a></div>`;
+    }
+  } catch (e) {
     const er = $('#err'); if (er) er.textContent = e.message + ' – oder rufen Sie uns direkt an.'; btn.disabled = false; btn.textContent = 'Meldung absenden'; }
 }
 $('#next').onclick = next;
@@ -152,19 +165,4 @@ $('#back').onclick = () => { collect(); if (i) { i--; render(); } };
 document.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA' && !$('#next').disabled && e.target.tagName !== 'BUTTON') next(); });
 render();
 
-// Marken mit Weiterleitung (z. B. Life Fitness, vertraglich): Pop-up mit Link zum Hersteller.
-function brandModal(name, url){
-  const m = document.createElement('div'); m.className = 'modal'; m.setAttribute('role','dialog'); m.setAttribute('aria-modal','true');
-  m.innerHTML = `<div class="box"><div class="em">ℹ️</div><h2>Für ${esc(name)} bitte direkt zum Hersteller</h2>
-    <p>Geräte der Marke ${esc(name)} betreuen wir aus vertraglichen Gründen nicht selbst. Bitte wenden Sie sich an den offiziellen Kundendienst des Herstellers – dort erhalten Sie Hilfe für Ihr Gerät.</p>
-    <a class="btn btn-primary" id="lfgo" href="${esc(url)}" target="_blank" rel="noopener">Zum ${esc(name)} Kundendienst ↗</a>
-    <button class="btn btn-ghost" id="lfno">Andere Marke wählen</button></div>`;
-  document.body.appendChild(m);
-  const close = () => { m.remove(); document.removeEventListener('keydown', esc2); };
-  const esc2 = (e) => { if (e.key === 'Escape') close(); };
-  document.addEventListener('keydown', esc2);
-  m.onclick = (e) => { if (e.target === m) close(); };
-  m.querySelector('#lfno').onclick = close;
-  m.querySelector('#lfno').focus();
-}
 loadBrands();

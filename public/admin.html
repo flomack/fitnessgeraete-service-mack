@@ -62,7 +62,7 @@ td{padding:14px 10px;border-bottom:1px solid var(--line)}tr.r{cursor:pointer}tr.
 <script src="sb.js"></script>
 <div id="app"></div><div class="scrim" id="scrim"></div><aside class="drawer" id="drawer" aria-label="Auftrag"></aside>
 <script>
-const COLS = [['neu','Neu'],['geprueft','In Prüfung'],['termin','Termin vereinbart'],['in_arbeit','In Bearbeitung'],['teile','Wartet auf Teile'],['erledigt','Erledigt']];
+const COLS = [['neu','Neu'],['geprueft','In Prüfung'],['termin','Termin vereinbart'],['in_arbeit','In Bearbeitung'],['teile','Wartet auf Teile'],['erledigt','Erledigt'],['weitergeleitet','An Hersteller verwiesen']];
 const LBL = Object.fromEntries(COLS);
 const TYPE = {defekt:'Defekt',wartung:'Wartung',polster:'Polster',umzug:'Transport/Montage',verkauf:'An-/Verkauf',sonstiges:'Sonstiges'};
 const URG = {down:'Gerät steht',limited:'Eingeschränkt',none:'Kein Zeitdruck'};
@@ -72,7 +72,7 @@ const $ = (s) => document.querySelector(s), app = $('#app');
 const esc = (t) => String(t ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const ref = (id) => 'T-' + String(id).padStart(4,'0');
 const ago = (iso) => { const m = (Date.now()-new Date(iso))/6e4; return m<60?`${Math.round(m)} Min.`:m<1440?`${Math.round(m/60)} Std.`:`${Math.round(m/1440)} Tg.`; };
-const EV = { neu:'Neu', geprueft:'In Prüfung', termin:'Termin vereinbart', in_arbeit:'In Bearbeitung', teile:'Wartet auf Teile', erledigt:'Erledigt' };
+const EV = { neu:'Neu', geprueft:'In Prüfung', termin:'Termin vereinbart', in_arbeit:'In Bearbeitung', teile:'Wartet auf Teile', erledigt:'Erledigt', weitergeleitet:'An Hersteller verwiesen' };
 const logEvent = (id, kind, text) => sb.from('ticket_events').insert({ ticket_id:id, kind, text });
 // Änderung speichern und im Verlauf festhalten
 async function update(id, patch, evText){
@@ -105,20 +105,20 @@ async function load(){
 }
 
 function filtered(){
-  let l = T.filter(t => (showDone || t.status!=='erledigt' || view==='board') && (!fp || t.priority===fp) &&
+  let l = T.filter(t => (showDone || (t.status!=='erledigt' && t.status!=='weitergeleitet') || view==='board') && (!fp || t.priority===fp) &&
     (!q || [t.studio,t.name,t.brand,t.model,t.category,t.description,ref(t.id)].join(' ').toLowerCase().includes(q)));
   const s = { new:(a,b)=>b.id-a.id, old:(a,b)=>a.id-b.id, prio:(a,b)=>PRW[a.priority]-PRW[b.priority]||a.id-b.id, studio:(a,b)=>a.studio.localeCompare(b.studio) }[sort];
   return l.sort(s);
 }
 function draw(){
-  const open = T.filter(t=>t.status!=='erledigt'), neu = T.filter(t=>t.status==='neu'), hot = open.filter(t=>t.priority==='hoch');
+  const open = T.filter(t=>t.status!=='erledigt' && t.status!=='weitergeleitet'), neu = T.filter(t=>t.status==='neu'), hot = open.filter(t=>t.priority==='hoch');
   app.innerHTML = `<div class="hd"><a class="logo"><img class="mk" src="mark.png" alt=""><span class="lt"><b>Fitnessgeräte</b><small>Service · Aufträge</small></span></a><div class="tools">
     <input id="q" type="search" placeholder="Suchen: Studio, Marke, Nr. …" value="${esc(q)}">
     <select id="fp"><option value="">Alle Prioritäten</option>${['hoch','mittel','niedrig'].map(p=>`<option ${fp===p?'selected':''} value="${p}">${p[0].toUpperCase()+p.slice(1)}</option>`).join('')}</select>
     <select id="so">${[['new','Neueste zuerst'],['old','Älteste zuerst'],['prio','Priorität'],['studio','Studio A–Z']].map(([v,l])=>`<option ${sort===v?'selected':''} value="${v}">${l}</option>`).join('')}</select>
     <div class="seg"><button class="${view==='board'?'on':''}" data-v="board">Board</button><button class="${view==='list'?'on':''}" data-v="list">Liste</button></div>
     <button class="btn btn-ghost sm" id="bm">Marken</button><button class="btn btn-ghost sm" id="lo">Abmelden</button></div></div>
-    <div class="kpis"><span class="hot"><b>${neu.length}</b>neu</span><span><b>${open.length}</b>offen</span><span class="hot"><b>${hot.length}</b>dringend</span><span><b>${T.length-open.length}</b>erledigt</span></div>
+    <div class="kpis"><span class="hot"><b>${neu.length}</b>neu</span><span><b>${open.length}</b>offen</span><span class="hot"><b>${hot.length}</b>dringend</span><span><b>${T.filter(t=>t.status==='erledigt').length}</b>erledigt</span><span><b>${T.filter(t=>t.status==='weitergeleitet').length}</b>weitergeleitet</span></div>
     ${view==='board'?boardHTML():listHTML()}`;
   $('#q').oninput = (e) => { q = e.target.value.toLowerCase(); const p = e.target.selectionStart; draw(); const n=$('#q'); n.focus(); n.setSelectionRange(p,p); };
   $('#fp').onchange = (e)=>{fp=e.target.value;draw()}; $('#so').onchange=(e)=>{sort=e.target.value;draw()};
@@ -132,7 +132,7 @@ function draw(){
 function card(t){
   return `<div class="tk" draggable="true" data-id="${t.id}" data-open="${t.id}"><div class="t1"><span>${ref(t.id)}</span><span>vor ${ago(t.created_at)}</span></div>
     <b><i class="pr p-${t.priority}"></i>${esc(t.studio)}</b><p>${esc([t.brand,t.category].filter(Boolean).join(' · '))}${t.description?' – '+esc(t.description):''}</p>
-    <div class="meta"><span class="tag">${TYPE[t.type]||t.type}</span>${t.urgency==='down'?'<span class="tag" style="color:#d92d20">Gerät steht</span>':''}${t.assignee?`<span class="tag">👤 ${esc(t.assignee)}</span>`:''}${t.due?`<span class="tag">📅 ${esc(t.due)}</span>`:''}${t.photos.length?`<span class="tag">📷 ${t.photos.length}</span>`:''}</div></div>`;
+    <div class="meta"><span class="tag">${TYPE[t.type]||t.type}</span>${t.urgency==='down'?'<span class="tag" style="color:#d92d20">Gerät steht</span>':''}${t.redirected_to?`<span class="tag" style="color:var(--accent)">→ ${esc(t.redirected_to)}</span>`:''}${t.assignee?`<span class="tag">👤 ${esc(t.assignee)}</span>`:''}${t.due?`<span class="tag">📅 ${esc(t.due)}</span>`:''}${t.photos.length?`<span class="tag">📷 ${t.photos.length}</span>`:''}</div></div>`;
 }
 function boardHTML(){
   const l = filtered();
@@ -140,7 +140,7 @@ function boardHTML(){
 }
 function listHTML(){
   const l = filtered();
-  return `<div class="tbl"><label style="font-size:14px;color:var(--muted);display:block;margin-bottom:10px"><input type="checkbox" id="sd" style="width:auto" ${showDone?'checked':''}> Erledigte anzeigen</label>
+  return `<div class="tbl"><label style="font-size:14px;color:var(--muted);display:block;margin-bottom:10px"><input type="checkbox" id="sd" style="width:auto" ${showDone?'checked':''}> Erledigte und weitergeleitete anzeigen</label>
   <table><thead><tr><th>Nr.</th><th>Studio</th><th>Gerät</th><th>Art</th><th>Priorität</th><th>Status</th><th>Zuständig</th><th>Alter</th></tr></thead><tbody>${l.map(t=>
     `<tr class="r" data-open="${t.id}"><td>${ref(t.id)}</td><td><b>${esc(t.studio)}</b><br><span style="color:var(--muted)">${esc(t.name)}</span></td><td>${esc([t.brand,t.category].filter(Boolean).join(' · '))}</td><td>${TYPE[t.type]||''}</td>
     <td><i class="pr p-${t.priority}"></i>${t.priority}</td><td>${LBL[t.status]}</td><td>${esc(t.assignee)||'–'}</td><td>${ago(t.created_at)}</td></tr>`).join('')||'<tr><td colspan="8" class="empty">Keine Aufträge</td></tr>'}</tbody></table></div>`;
